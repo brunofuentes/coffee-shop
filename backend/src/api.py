@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request, jsonify, abort
+from flask.json import tojson_filter
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
@@ -11,13 +12,33 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
+
+def retrieve_short_drinks():
+    drinks = Drink.query.all()
+    short_drinks = []
+    
+    for drink in drinks:
+        short_drinks.append(drink.short())
+
+    return short_drinks
+
+def retrieve_long_drinks():
+    drinks = Drink.query.all()
+    long_drinks = []
+
+    for drink in drinks:
+        long_drinks.append(drink.long())
+
+    return long_drinks
+
 
 # ROUTES
 '''
@@ -28,7 +49,23 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['GET'])
+def retrieve_drinks():
+    try:
+        short_drinks = retrieve_short_drinks()
 
+        if len(short_drinks) == 0:
+            abort(404)
+
+        else:
+            return jsonify({
+                'success': True,
+                'drinks': short_drinks
+            }), 200
+
+    except Exception as error:
+        print(error)
+        abort(422) #not able to process request
 
 '''
 @TODO implement endpoint
@@ -39,6 +76,23 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks-detail', methods=['GET'])
+def drinks_detail():
+    try:
+        long_drinks = retrieve_long_drinks()
+
+        if len(long_drinks) == 0:
+            abort(404)
+        
+        else:
+            return jsonify({
+                'success': True,
+                'drinks': long_drinks
+            }), 200
+
+    except Exception as error:
+        print(error)
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -50,6 +104,28 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks', methods=['POST'])
+def create_new_drink():
+
+    body = request.get_json()
+    title = body.get('title')
+    recipe = body.get('recipe')
+
+    try:
+        drink = Drink(
+            title = title,
+            recipe = json.dumps(recipe)
+        )
+        drink.insert()
+        
+        return jsonify({
+            'success': True,
+            'drinks': [drink.long()]
+        })
+    
+    except Exception as error:
+        print(error)
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -63,7 +139,32 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+def update_drink(drink_id):
 
+    body = request.get_json()
+    title = body.get('title')
+    recipe = body.get('recipe')
+
+    try:
+        drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+        if drink is None:
+            abort(404)
+        else:
+            drink.title = title
+            drink.recipe = json.dumps(recipe)
+            drink.update()
+
+        return jsonify({
+            'success': True,
+            'drinks': [drink.long()]
+        })
+
+    except Exception as error:
+        print(error)
+        abort(422)
+        
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
