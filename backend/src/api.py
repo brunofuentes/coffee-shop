@@ -39,7 +39,6 @@ def retrieve_long_drinks():
 
     return long_drinks
 
-
 # ROUTES
 '''
 @TODO implement endpoint
@@ -107,7 +106,7 @@ def drinks_detail():
 @app.route('/drinks', methods=['POST'])
 def create_new_drink():
 
-    body = request.get_json()
+    body = request.form
     title = body.get('title')
     recipe = body.get('recipe')
 
@@ -139,21 +138,22 @@ def create_new_drink():
         or appropriate status code indicating reason for failure
 '''
 
-@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
-def update_drink(drink_id):
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+def update_drink(id):
 
-    body = request.get_json()
-    title = body.get('title')
-    recipe = body.get('recipe')
+    body = request.form
+    new_title = body.get('title')
+    new_recipe = body.get('recipe')
 
     try:
-        drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+        drink = Drink.query.filter(Drink.id == id).one_or_none()
 
         if drink is None:
             abort(404)
         else:
-            drink.title = title
-            drink.recipe = json.dumps(recipe)
+            drink.title = new_title
+            if new_recipe is not None:
+                drink.recipe = json.dumps(new_recipe)
             drink.update()
 
         return jsonify({
@@ -175,6 +175,27 @@ def update_drink(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+def delete_drink(id):
+    try:
+        drink = Drink.query.filter(Drink.id == id).one_or_none()
+
+        if drink is None:
+            abort(404)
+
+        else:
+            drink.delete()
+        
+        return jsonify({
+            'success': True,
+            'delete': drink.id
+        }), 200
+
+    except Exception as error:
+        print(error)
+        abort(422)
+
 
 
 # Error Handling
