@@ -106,14 +106,14 @@ def drinks_detail():
 @app.route('/drinks', methods=['POST'])
 def create_new_drink():
 
-    body = request.form
-    title = body.get('title')
-    recipe = body.get('recipe')
+    body = request.get_json()
+    new_title = body.get('title')
+    new_recipe = body.get('recipe')
 
     try:
         drink = Drink(
-            title = title,
-            recipe = json.dumps(recipe)
+            title = new_title,
+            recipe = json.dumps(new_recipe)
         )
         drink.insert()
         
