@@ -76,7 +76,7 @@ def retrieve_drinks():
 '''
 
 @app.route('/drinks-detail', methods=['GET'])
-@requires_auth('get: drinks-detail')
+@requires_auth('get:drinks-detail')
 def drinks_detail(payload):
     try:
         long_drinks = retrieve_long_drinks()
@@ -105,7 +105,7 @@ def drinks_detail(payload):
 '''
 
 @app.route('/drinks', methods=['POST'])
-@requires_auth('post: drinks')
+@requires_auth('post:drinks')
 def create_new_drink(payload):
 
     body = request.get_json()
@@ -141,7 +141,7 @@ def create_new_drink(payload):
 '''
 
 @app.route('/drinks/<int:id>', methods=['PATCH'])
-@requires_auth('patch: drinks')
+@requires_auth('patch:drinks')
 def update_drink(payload, id):
 
     body = request.form
@@ -180,7 +180,7 @@ def update_drink(payload, id):
 '''
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
-@requires_auth('delete: drinks')
+@requires_auth('delete:drinks')
 def delete_drink(payload, id):
     try:
         drink = Drink.query.filter(Drink.id == id).one_or_none()
